@@ -26,7 +26,7 @@ public class StatsController {
     List<StatDto> getHits(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                           @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                           @RequestParam(required = false) List<String> uris,
-                          @RequestParam(required = false, defaultValue = "false") Boolean unique) {
+                          @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("getHits from {} to {}, unique = {}, uris:{}", start, end, unique, uris);
         return statsService.getHits(start, end, uris, unique);
     }

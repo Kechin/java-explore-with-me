@@ -19,7 +19,7 @@ public class Hit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private Long id;
-    @Column(nullable = false, length = 1000)
+    @Column(name = "app", nullable = false, length = 128)
     private String app;
     @Column(name = "requester_ip", nullable = false, length = 64)
     private String ip;

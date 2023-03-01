@@ -44,6 +44,7 @@ public class ErrorHandler {
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
+            log.error("В {} возникла ошибка: {}", fieldName, errorMessage);
             errors.put(fieldName, errorMessage);
         });
         return errors;
@@ -51,7 +52,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<String> handleThrowable(final Throwable e) {
-        log.error(e.getMessage() + "  " + HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("Возникла ошибка: {} {}", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 

@@ -13,14 +13,15 @@ import java.time.LocalDateTime;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "HITS")
+@Table(name = "hits")
 public class Hit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private Long id;
-    @Column(name = "app", nullable = false, length = 128)
-    private String app;
+    @ManyToOne
+    @JoinColumn(name = "app", nullable = false)
+    private App app;
     @Column(name = "requester_ip", nullable = false, length = 64)
     private String ip;
     @Column(nullable = false, length = 1000)

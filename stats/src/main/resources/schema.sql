@@ -7,4 +7,3 @@ CREATE TABLE IF NOT EXISTS hits(
     uri VARCHAR(128),
     requester_ip VARCHAR(128),
     created_on TIMESTAMP WITHOUT TIME ZONE);
-INSERT  INTO APPS (APPNAME) VALUES ( 'ewm-main-service' );

@@ -15,7 +15,8 @@ public class StatMapper {
         log.info("попытка создать StatDto: {} ", newStatDto);
         return newStatDto;
     }
-    public static List<StatDto> statDtos(List<Stat> stats){
+
+    public static List<StatDto> statDtos(List<Stat> stats) {
         return stats.stream().map(StatMapper::statToStatDto).collect(Collectors.toList());
     }
 

@@ -27,7 +27,8 @@ public interface HitsRepository extends JpaRepository<Hit, Long> {
             "from Hit e where e.timeStamp > ?1 and  e.timeStamp <?2  group by e.app, e.uri,e.ip " +
             "order by count (e.app) desc")
     List<Stat> getUniqueViewsWithoutUris(LocalDateTime start, LocalDateTime end);
-    Integer countAllByUri (String uri);
+
+    Integer countAllByUri(String uri);
 
 }
 

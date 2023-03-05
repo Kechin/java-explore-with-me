@@ -1,4 +1,4 @@
-package ru.practicum.event.model;
+package ru.practicum.event;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,10 @@ import ru.practicum.event.Dto.EventFullDto;
 import ru.practicum.event.Dto.EventNewDto;
 import ru.practicum.event.Dto.EventShortDto;
 import ru.practicum.event.Dto.UpdateEventReq;
-import ru.practicum.event.EventRepository;
+import ru.practicum.event.model.Event;
+import ru.practicum.event.model.EventMapper;
+import ru.practicum.event.model.State;
+import ru.practicum.event.model.StateAction;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.location.Location;
@@ -139,17 +142,6 @@ public class EventService {
         return EventMapper.toEventDto(getEvent(eventId));
     }
 
-    //  @Transactional
-    //Отмена события пользователем.
-//    public EventFullDto cancel(Long eventId, Long initiatorId) {
-//        Event event = getEvent(eventId);
-//        if (initiatorId.equals(event.getInitiator().getId())) {
-//            event.setState(State.CANCELED);
-//            return EventMapper.toEventDto(event);
-//        }
-//        throw new NotFoundException("Неверный запрос");
-//    }
-
 
     @Transactional
     public EventFullDto update(UpdateEventReq updateEventReq, Long id) {
@@ -221,11 +213,6 @@ public class EventService {
     }
 
 
-//    public List<EventShortDto> getAllbyId(Long eventId, Long initiatorId, Integer from, Integer size) {
-//        Pageable pageable = PageRequest.of(from / size, size, sortByDescEnd);
-//        return EventMapper.toEventShortDtos(eventRepository.findAll(pageable).toList());
-//    }
-
     //Admin
     public List<EventFullDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
                                         LocalDateTime rangeStart,
@@ -261,16 +248,6 @@ public class EventService {
         return EventMapper.toEventDto(event);
     }
 
-//    @Transactional
-//    public EventFullDto setCanceledByUser(Long eventId, Long userId) {
-//        Event event = getEvent(eventId);
-//        User user = getUser(userId);
-//        if (event.getInitiator().equals(userId)) {
-//            event.setState(State.CANCELED);
-//            return EventMapper.toEventDto(event);
-//        }
-//        throw new NotFoundException("Неверный запрос");
-//    }
 
     @Transactional
     public EventFullDto setPublished(Long eventId) {
@@ -288,17 +265,6 @@ public class EventService {
         return RequestMapper.toRequestDtos(requestRepository.getAllByEvent_Id(eventId));
     }
 
-
-//    @Transactional
-//    public ParticipationRequestDto rejectRequest(Long userId, Long eventId, Long requestId) {
-//        Request request = getRequest(requestId);
-//        Event event = getEvent(eventId);
-//        if (event.getInitiator().getId().equals(userId) || request.getEvent().getId().equals(eventId)) {
-//            request.setStatus(Status.REJECTED);
-//            return RequestMapper.toPartRequestDto(request);
-//        }
-//        throw new NotFoundException("Неверные параметры вызова");
-//    }
 
     @Transactional
     public EventRequestStatusUpdateResult requestsStatusUpdate(Long userId, Long eventId,
@@ -338,7 +304,7 @@ public class EventService {
     }
 
     private Event getEvent(Long id) {
-        Event event= eventRepository.findById(id).orElseThrow(() ->
+        Event event = eventRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("неверный Event ID"));
         return setView(event);
     }
@@ -358,11 +324,12 @@ public class EventService {
                 new NotFoundException("неверный Request ID"));
     }
 
-    private Event setView (Event event){
-        event.setViews( statClient.getViews(event.getId()));
+    private Event setView(Event event) {
+        event.setViews(statClient.getViews(event.getId()));
         return event;
     }
-    private List<Event> setViews (List<Event> event) {
+
+    private List<Event> setViews(List<Event> event) {
         return event.stream().map(this::setView).collect(Collectors.toList());
 
     }

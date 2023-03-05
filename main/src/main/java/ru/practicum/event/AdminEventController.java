@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.event.Dto.EventFullDto;
 import ru.practicum.event.Dto.UpdateEventReq;
 import ru.practicum.event.model.State;
-import ru.practicum.event.model.EventService;
 
 import javax.validation.constraints.Min;
 import java.time.LocalDateTime;

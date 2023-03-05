@@ -4,6 +4,7 @@ package ru.practicum;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class StatsController {
     }
 
     @PostMapping("/hit")
+    @ResponseStatus(code = HttpStatus.CREATED)
     void create(@RequestBody HitDto hitDto) {
         statsService.addHit(hitDto);
     }

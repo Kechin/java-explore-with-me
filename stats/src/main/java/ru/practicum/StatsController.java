@@ -15,7 +15,11 @@ import java.util.List;
 public class StatsController {
 
     private final StatsService statsService;
-
+    @GetMapping("/hit")
+    public Integer getViews(@RequestParam String uri) {
+        log.info("Запрос на статистику для {}",uri);
+        return statsService.getCountForUri(uri);
+    }
 
     @PostMapping("/hit")
     void create(@RequestBody HitDto hitDto) {

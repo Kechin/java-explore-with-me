@@ -43,4 +43,8 @@ public class StatsService {
         log.info("Попытка добавить новый Hit");
         hitsRepository.save(HitMapper.hitDtoToHit(hitDto));
     }
+
+    public Integer getCountForUri(String uri) {
+        return hitsRepository.countAllByUri(uri);
+    }
 }

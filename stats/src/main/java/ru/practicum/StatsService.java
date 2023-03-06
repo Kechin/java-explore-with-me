@@ -19,7 +19,7 @@ public class StatsService {
 
     public List<StatDto> getHits(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         List<Stat> stats;
-        if (uris == null || uris.isEmpty()) {
+        if (uris == null || uris.isEmpty() || uris.contains("/events")) {
             log.info("Get запрос без uris");
             stats = (unique ? hitsRepository.getUniqueViewsWithoutUris(start, end) :
                     hitsRepository.getAllViewsWithoutUris(start, end));

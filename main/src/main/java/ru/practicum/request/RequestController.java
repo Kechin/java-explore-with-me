@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.request.Dto.ParticipationRequestDto;
-import ru.practicum.request.service.impl.RequestServiceImpl;
 
 import java.util.List;
 

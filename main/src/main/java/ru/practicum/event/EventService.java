@@ -232,8 +232,8 @@ public class EventService {
         if (categories == null) {
             categories = categoryRepository.findAll().stream().map(e -> e.getId()).collect(Collectors.toList());
         }
-        List<Event> events = eventRepository.findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween
-                (pageable, users, states, categories, rangeStart, rangeEnd).toList();
+        List<Event> events = eventRepository.findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween(
+                pageable, users, states, categories, rangeStart, rangeEnd).toList();
         return EventMapper.toEventFullDtos(setViews(events));
 
     }

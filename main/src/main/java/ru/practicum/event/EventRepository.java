@@ -27,8 +27,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
                                                                                        LocalDateTime end);
 
 
-    Page<Event> findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween
-            (Pageable pageable, String annotation, String description, Collection<Category> category, LocalDateTime eventDate, LocalDateTime eventDate2);
+    Page<Event> findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(
+            Pageable pageable, String annotation, String description, Collection<Category> category,
+            LocalDateTime eventDate, LocalDateTime eventDate2);
 
 
 }

@@ -49,8 +49,8 @@ public class CompilationService {
         if (events == null) {
             events = new ArrayList<>();
         }
-        return CompilationMapper.toCompilationDto(compilationRepository.save
-                (new Compilation((events), compilation.getTitle(), compilation.getPinned())));
+        return CompilationMapper.toCompilationDto(compilationRepository.save(new Compilation((events),
+                compilation.getTitle(), compilation.getPinned())));
     }
 
     private List<Event> getEvents(List<Long> ids) {

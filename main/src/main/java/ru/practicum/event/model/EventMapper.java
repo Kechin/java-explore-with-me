@@ -31,8 +31,8 @@ public class EventMapper {
     public static Event eventNewDtoToEvent(EventNewDto eventDto) {
         Location location = LocationMapper.toLocation(eventDto.getLocation());
         return new Event(null, eventDto.getAnnotation(), null, eventDto.getDescription(), null,
-                eventDto.getPaid(), eventDto.getTitle(), 0, 0, eventDto.getEventDate(), location
-                , eventDto.getParticipantLimit(), eventDto.getRequestModeration());
+                eventDto.getPaid(), eventDto.getTitle(), 0, 0, eventDto.getEventDate(),
+                location, eventDto.getParticipantLimit(), eventDto.getRequestModeration());
     }
 
 

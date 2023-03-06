@@ -55,7 +55,7 @@ public class CompilationService {
 
     private List<Event> getEvents(List<Long> ids) {
         List<Event> events = eventRepository.findAllByIdIn(ids);
-        if (events == null) new NotFoundException("Неверный Event ID");
+        if (events == null) throw new NotFoundException("Неверный Event ID");
         log.info("Получен список событий {}", events);
 
         return events;

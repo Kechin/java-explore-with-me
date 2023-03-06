@@ -41,10 +41,12 @@ public class PublicEventController {
                                               @RequestParam(defaultValue = "EVENT_DATE")
                                               String sort,
                                               @Valid @PositiveOrZero @RequestParam(defaultValue = "0") int from,
-                                              @Valid @Positive @RequestParam(defaultValue = "10") int size) {
-
+                                              @Valid @Positive @RequestParam(defaultValue = "10") int size,
+                                              HttpServletRequest httpServletRequest) {
+        hitSender.createHit(httpServletRequest);
         log.info("Запрос на получения эвента с фильтрацией {}", text);
-        return eventService.getAllWithFilter(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+        return eventService.getAllWithFilter(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from,
+                size, httpServletRequest);
     }
 
     @GetMapping("/{eventId}")

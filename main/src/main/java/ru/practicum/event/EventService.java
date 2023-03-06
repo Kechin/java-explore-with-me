@@ -32,6 +32,7 @@ import ru.practicum.request.model.Status;
 import ru.practicum.user.UserRepository;
 import ru.practicum.user.model.User;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,17 +58,20 @@ public class EventService {
 
     public List<EventShortDto> getAllWithFilter(String text, ArrayList<Long> cats, Boolean paid, LocalDateTime start,
                                                 LocalDateTime end, Boolean onlyAvalable, String sort, Integer from,
-                                                Integer size) {
+                                                Integer size, HttpServletRequest httpServletRequest) {
         List<Category> categories = categoryRepository.findAllById(cats);
         Sort sortValue = Sort.by(Sort.Direction.DESC, (Objects.equals(sort, "EVENT_DATE") ? "eventDate" : "views"));//EVENT_DATE, VIEWS
         Pageable pageable = PageRequest.of(from / size, size, sortValue);
         log.info("Запрос на поис эвентов cat:{}  \n ", cats);
         List<Event> events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(pageable, text, text, categories, start, end).toList();
-        setViews(events);
         if (onlyAvalable) {
             events = events.stream().filter(x -> (x.getConfirmedRequests() < x.getParticipantLimit()))
                     .collect(Collectors.toList());
         }
+
+
+        setViews(events);
+
         return EventMapper.toEventShortDtos(events);
 
 

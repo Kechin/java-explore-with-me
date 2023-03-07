@@ -8,23 +8,22 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.Dto.CompilationDto;
 import ru.practicum.compilation.Dto.CompilationShortDto;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
-@Slf4j
-@Validated
 public class AdminCompilationController {
     private final CompilationService compilitationService;
 
-
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
-    CompilationDto create(@RequestBody CompilationShortDto compilation) {
+    CompilationDto create(@RequestBody @Valid CompilationShortDto compilation) {
         return compilitationService.create(compilation);
     }
 
     @PatchMapping(("/{compId}"))
-    CompilationDto publish(@PathVariable Long compId, @RequestBody CompilationShortDto compilation) {
+    CompilationDto publish(@PathVariable Long compId,  @RequestBody @Valid CompilationShortDto compilation) {
         return compilitationService.update(compId,compilation);
     }
 

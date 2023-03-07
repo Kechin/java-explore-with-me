@@ -1,9 +1,11 @@
 package ru.practicum.category;
 
 
+import lombok.experimental.UtilityClass;
+
 import java.util.List;
 import java.util.stream.Collectors;
-
+@UtilityClass
 public class CategoryMapper {
     public static CategoryDto toCategoryDto(Category category) {
         return new CategoryDto(category.getId(), category.getName());

@@ -7,6 +7,7 @@ import ru.practicum.event.model.Event;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Set;
 
 
 @Getter
@@ -23,13 +24,13 @@ public class Compilation {
             name = "compilation_events",
             joinColumns = @JoinColumn(name = "id"),
             inverseJoinColumns = @JoinColumn(name = "event_id"))
-    private List<Event> events;
+    private Set<Event> events;
     @Column(unique = true, nullable = false, length = 1024)
     private String title;
     @Column
     private Boolean pinned;
 
-    public Compilation(List<Event> events, String title, Boolean pinned) {
+    public Compilation(Set<Event> events, String title, Boolean pinned) {
         this.events = events;
         this.title = title;
         this.pinned = pinned;

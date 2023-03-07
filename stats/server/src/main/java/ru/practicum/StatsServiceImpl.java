@@ -12,11 +12,12 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class StatsService {
+public class StatsServiceImpl implements StatsService {
 
     private final HitsRepository hitsRepository;
     private final AppRepository appRepository;
 
+    @Override
     public List<StatDto> getHits(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         List<Stat> stats;
         if (uris == null || uris.isEmpty()) {
@@ -32,6 +33,7 @@ public class StatsService {
         return StatMapper.statDtos(stats);
     }
 
+    @Override
     @Transactional
     public void addHit(HitDto hitDto) {
         String appName = hitDto.getApp();
@@ -44,6 +46,7 @@ public class StatsService {
         hitsRepository.save(HitMapper.hitDtoToHit(hitDto));
     }
 
+    @Override
     public Integer getCountForUri(String uri) {
         return hitsRepository.countAllByUri(uri);
     }

@@ -8,19 +8,26 @@ import lombok.ToString;
 import ru.practicum.category.CategoryDto;
 import ru.practicum.user.Dto.UserDto;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 public class EventShortDto {
     private Long id;
+    @NotBlank
+    @Size(max=2048)
     private String annotation;
     private CategoryDto category;
+    @NotBlank
+    @Size(max=128000)
     private String description;
     private UserDto initiator;
     private Boolean paid;
+    @NotBlank
+    @Size(max=1024)
     private String title;
     private Integer views;
     private Integer confirmedRequests;

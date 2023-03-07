@@ -6,16 +6,21 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import ru.practicum.event.Dto.EventShortDto;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 public class CompilationDto {
 
-    List<EventShortDto> events;
-    Long id;
-    Boolean pinned;
-    String title;
+  private Set<EventShortDto> events;
+    private Long id;
+    @NotBlank
+    private Boolean pinned;
+    @NotBlank
+    @Size(max=1024)
+    private String title;
 }

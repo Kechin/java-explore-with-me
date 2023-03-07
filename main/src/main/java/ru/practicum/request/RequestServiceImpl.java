@@ -23,21 +23,23 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Transactional(readOnly = true)
-public class RequestServiceImpl {
+public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
+    @Override
     public List<ParticipationRequestDto> get(Long requesterId) {
         return RequestMapper.toRequestDtos(requestRepository.getAllByRequester_Id(requesterId));
     }
 
+    @Override
     @Transactional
     public ParticipationRequestDto create(Long requesterId, Long eventId) {
-        log.info("Создание нового реквеста " + requesterId + " " + eventId);
+        log.info("Создание нового реквеста {}  {}" , requesterId , eventId);
         User requester = getUser(requesterId);
         Event event = getEvent(eventId);
-        log.info("Получены Event User: " + event.getId() + " " + requester.getId());
+        log.info("Получены Event User: {} {} ", event.getId() , requester.getId());
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("Нельзя создать запрос на участие в неопубликованном событии.");
         }
@@ -52,30 +54,14 @@ public class RequestServiceImpl {
         if (event.getInitiator().getId().equals(requester.getId())) {
             throw new ConflictException("Нельзя создавать запрос на участие в своем событии");
         }
-        log.info("Лимит участников {} - Всего учатников {}", event.getParticipantLimit(), event.getConfirmedRequests());
+        log.info("Лимит участников {} ", event.getParticipantLimit());
         Status status = event.getRequestModeration() ? Status.PENDING : Status.CONFIRMED;
         Request request = new Request(null, LocalDateTime.now(), event, requester, status);
         log.info("Реквест создан");
         return RequestMapper.toPartRequestDto(requestRepository.save(request));
     }
-//    @Transactional
-//    public ParticipationRequestDto confirmRequest(Long userId, Long eventId, Long requestId) {
-//        Request request = getRequest(requestId);
-//        Event event = getEvent(eventId);
-//        if (event.getConfirmedRequests() < event.getParticipantLimit() ||
-//                event.getRequestModeration() || event.getParticipantLimit() != 0) {
-//            request.setStatus(Status.CONFIRMED);
-//        }
-//        if (event.getConfirmedRequests() == event.getParticipantLimit()) {
-//            List<Request> requests = requestRepository.getAllByEvent_IdAndStatus(eventId, Status.PENDING);
-//            for (Request req : requests) {
-//                req.setStatus(Status.CANCELED);
-//            }
-//        }
-//        return RequestMapper.toPartRequestDto(request);
-//    }
 
-
+    @Override
     @Transactional
     public ParticipationRequestDto cancelRequest(Long requesterId, Long requestId) {
         Request request = getRequest(requestId);
@@ -98,7 +84,6 @@ public class RequestServiceImpl {
     }
 
     private User getUser(Long id) {
-        log.info(String.valueOf(userRepository.findAll().isEmpty()));
         return userRepository.findById(id).orElseThrow(() ->
                 new NotFoundException("неверный User ID"));
     }

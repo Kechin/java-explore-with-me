@@ -13,11 +13,8 @@ import java.util.List;
 @RequestMapping("/users")
 @AllArgsConstructor
 @Slf4j
-@Validated
 public class RequestController {
-
-
-    RequestServiceImpl requestService;
+    private final RequestService requestService;
 
     @GetMapping("/{userId}/requests")
     List<ParticipationRequestDto> getAllByUserId(@PathVariable Long userId) {

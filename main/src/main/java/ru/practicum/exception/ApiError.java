@@ -9,12 +9,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@ToString
 @AllArgsConstructor
 public class ApiError {
-    List<String> errors;
-    String message;
-    String reason;
-    HttpStatus status;
-    LocalDateTime timestamp;
+    private List<String> errors;
+    private String message;
+    private String reason;
+    private HttpStatus status;
+    private LocalDateTime timestamp;
 }

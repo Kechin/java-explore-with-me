@@ -1,12 +1,13 @@
 package ru.practicum.compilation.model;
 
 
+import lombok.experimental.UtilityClass;
 import ru.practicum.compilation.Dto.CompilationDto;
 import ru.practicum.event.model.EventMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+@UtilityClass
 public class CompilationMapper {
 
     public static CompilationDto toCompilationDto(Compilation compilation) {

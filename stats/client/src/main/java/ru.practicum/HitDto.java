@@ -1,4 +1,4 @@
-package ru.practicum;
+package ru.practicum.client.src.main.java.ru.practicum;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -16,6 +16,5 @@ public class HitDto {
     private String uri;
     private String ip;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-
     private LocalDateTime timestamp;
 }

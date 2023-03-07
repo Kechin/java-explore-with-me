@@ -2,13 +2,14 @@ package ru.practicum;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class StatMapper {
     public static StatDto statToStatDto(Stat stat) {
         StatDto newStatDto = new StatDto(stat.getApp(), stat.getUri(), stat.getHitsCount());

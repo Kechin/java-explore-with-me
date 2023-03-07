@@ -15,6 +15,7 @@ import ru.practicum.request.Dto.ParticipationRequestDto;
 
 import javax.validation.constraints.Min;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
@@ -26,9 +27,9 @@ public class PrivateEventController {
     private final EventService eventService;
 
     @GetMapping("/{userId}/events")
-    List<EventShortDto> getAllByUserId(@PathVariable Long userId,
-                                       @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                       @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+    Set<EventShortDto> getAllByUserId(@PathVariable Long userId,
+                                      @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                      @RequestParam(defaultValue = "10") @Min(1) Integer size) {
 
         return eventService.getAll(userId, from, size);
     }
@@ -43,7 +44,6 @@ public class PrivateEventController {
     @PostMapping("/{userId}/events")
     EventFullDto create(@PathVariable Long userId, @RequestBody EventNewDto event) {
         log.info("Запрос на добавление нового события");
-
         return eventService.create(event, userId);
     }
 
@@ -63,6 +63,5 @@ public class PrivateEventController {
                                                         @RequestBody EventRequestStatusUpdateRequest request) {
         log.info("Запрос на изменение статуса реквеста {}", request);
         return eventService.requestsStatusUpdate(userId, eventId, request);
-
     }
 }

@@ -2,10 +2,11 @@ package ru.practicum;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class HitMapper {
 
     public static Hit hitDtoToHit(HitDto hitDto) {

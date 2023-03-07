@@ -12,10 +12,9 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/admin/categories")
 @AllArgsConstructor
-@Validated
 public class AdminCategoryController {
 
-    CategoryServiceImpl categoryService;
+    private final CategoryService categoryService;
 
     @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)

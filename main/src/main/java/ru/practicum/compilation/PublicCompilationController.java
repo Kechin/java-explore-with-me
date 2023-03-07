@@ -6,20 +6,21 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.compilation.Dto.CompilationDto;
 
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
 @RequestMapping("/compilations")
 @RequiredArgsConstructor
-@Slf4j
 @Validated
 public class PublicCompilationController {
     private final CompilationService compilitationService;
 
     @GetMapping
     List<CompilationDto> get(@RequestParam(defaultValue = "true") Boolean pinned,
-                             @RequestParam(defaultValue = "0") Integer from,
-                             @RequestParam(defaultValue = "10") Integer size) {
+                             @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
+                             @Positive @RequestParam(defaultValue = "10") Integer size) {
         return compilitationService.getAll(pinned, from, size);
     }
 

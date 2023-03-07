@@ -10,18 +10,23 @@ import ru.practicum.event.model.State;
 import ru.practicum.location.LocationDto;
 import ru.practicum.user.Dto.UserDto;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 public class EventFullDto {
     private Long id;
+    @NotBlank
+    @Size(max=2048)
     private String annotation;
     private CategoryDto category;
     private Integer confirmedRequests;
     private LocalDateTime createdOn;
+    @NotBlank
+    @Size(max=128000)
     private String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
@@ -32,7 +37,11 @@ public class EventFullDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
     private Boolean requestModeration;
+    @NotBlank
+    @Size(max=64)
     private State state;
+    @NotBlank
+    @Size(max=1024)
     private String title;
     private Integer views;
 }

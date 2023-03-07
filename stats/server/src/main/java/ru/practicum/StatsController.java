@@ -17,12 +17,6 @@ public class StatsController {
 
     private final StatsService statsService;
 
-    @GetMapping("/hit")
-    public Integer getViews(@RequestParam String uri) {
-        log.info("Запрос на статистику для {}", uri);
-        return statsService.getCountForUri(uri);
-    }
-
     @PostMapping("/hit")
     @ResponseStatus(code = HttpStatus.CREATED)
     void create(@RequestBody HitDto hitDto) {
@@ -30,8 +24,10 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    List<StatDto> getHits(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-                          @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+    List<StatDto> getHits(@RequestParam(required = false)
+                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                          @RequestParam(required = false)
+                          @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                           @RequestParam(required = false) List<String> uris,
                           @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("getHits from {} to {}, unique = {}, uris:{}", start, end, unique, uris);

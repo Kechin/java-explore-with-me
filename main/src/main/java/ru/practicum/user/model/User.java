@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.validation.annotation.Validated;
 
 import javax.persistence.*;
 
@@ -13,7 +14,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-
+@Validated
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +22,7 @@ public class User {
     private Long id;
     @Column(unique = true, nullable = false, length = 256)
     private String name;
-    @Column(name = "email", unique = true, nullable = false, length = 256)
+    @Column(name = "email", unique = true, nullable = false, length = 512)
     private String email;
 }
 

@@ -10,6 +10,7 @@ import ru.practicum.event.model.State;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 
 public interface EventRepository extends JpaRepository<Event, Long> {
@@ -17,7 +18,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     Page<Event> findAll(Pageable pageRequest);
 
-    List<Event> findAllByIdIn(List<Long> ids);
+    Set<Event> findAllByIdIn(List<Long> ids);
 
     Page<Event> findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween(Pageable pageable,
                                                                                        List<Long> users,

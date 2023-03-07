@@ -1,5 +1,6 @@
 package ru.practicum.request.model;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.request.Dto.ParticipationRequestDto;
 
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
+@UtilityClass
 public class RequestMapper {
     public static Request toRequest(ParticipationRequestDto participationRequestDto) {
         return new Request(participationRequestDto.getId(), participationRequestDto.getCreated(), null, null, participationRequestDto.getStatus());

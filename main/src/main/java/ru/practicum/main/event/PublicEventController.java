@@ -1,5 +1,6 @@
 package ru.practicum.main.event;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -52,7 +53,7 @@ public class PublicEventController {
     }
 
     @GetMapping("/{eventId}")
-    EventFullDto getById(@PathVariable Long eventId, HttpServletRequest httpServletRequest) {
+    EventFullDto getById(@PathVariable Long eventId, HttpServletRequest httpServletRequest) throws JsonGenerationException {
         log.info("Запрос на создание hit {}", httpServletRequest.getRequestURI());
         log.info("Попытка отправить HIT");
         hitSender.createHit(httpServletRequest);

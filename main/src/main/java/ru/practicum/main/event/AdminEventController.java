@@ -1,5 +1,6 @@
 package ru.practicum.main.event;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
@@ -28,22 +29,22 @@ public class AdminEventController {
                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeStart,
                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                           @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                          @RequestParam(defaultValue = "10") @Min(1) Integer size) {
+                          @RequestParam(defaultValue = "10") @Min(1) Integer size) throws JsonGenerationException {
         return eventService.getEvents(users, states, categories, rangeStart, rangeEnd, from, size);
     }
 
     @PatchMapping("/{eventId}")
-    EventFullDto update(@PathVariable Long eventId, @RequestBody UpdateEventReq event) {
+    EventFullDto update(@PathVariable Long eventId, @RequestBody UpdateEventReq event) throws JsonGenerationException {
         return eventService.updateByAdmin(event, eventId);
     }
 
     @PatchMapping(("/{eventId}/publish"))
-    EventFullDto publish(@PathVariable Long eventId) {
+    EventFullDto publish(@PathVariable Long eventId) throws JsonGenerationException {
         return eventService.setPublished(eventId);
     }
 
     @PatchMapping(("/{eventId}/reject"))
-    EventFullDto canceled(@PathVariable Long eventId) {
+    EventFullDto canceled(@PathVariable Long eventId) throws JsonGenerationException {
         return eventService.setCanceled(eventId);
     }
 }

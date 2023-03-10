@@ -1,7 +1,9 @@
 package ru.practicum.main.exception;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.PropertyValueException;
+import org.springframework.boot.json.JsonParseException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -14,7 +16,6 @@ import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @RestControllerAdvice
 @Slf4j
@@ -90,11 +91,19 @@ public class ErrorHandler {
                 HttpStatus.CONFLICT, LocalDateTime.now());
     }
 
-//    @ExceptionHandler
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ApiError otherErrors(final RuntimeException e) {
-//        log.error(e.getMessage());
-//        return new ApiError(List.of(e.getMessage()), e.getMessage(), "Ошибки в запросе",
-//                HttpStatus.BAD_REQUEST, LocalDateTime.now());
-//    }
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ApiError jsonException(final JsonParseException e) {
+        log.error(e.getMessage());
+        return new ApiError(List.of(e.getMessage()), e.getMessage(), "Ошибки в запросе.",
+                HttpStatus.BAD_GATEWAY, LocalDateTime.now());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ApiError jsonGenException(final JsonGenerationException e) {
+        log.error(e.getMessage());
+        return new ApiError(List.of(e.getMessage()), e.getMessage(), "Ошибки в запросе.",
+                HttpStatus.BAD_GATEWAY, LocalDateTime.now());
+    }
 }

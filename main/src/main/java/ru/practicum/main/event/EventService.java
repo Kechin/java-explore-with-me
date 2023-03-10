@@ -1,5 +1,6 @@
 package ru.practicum.main.event;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main.event.Dto.EventNewDto;
 import ru.practicum.main.event.Dto.EventShortDto;
@@ -26,33 +27,33 @@ public interface EventService {
     Set<EventShortDto> getAll(Long userId, Integer from, Integer size);
 
     @Transactional
-    EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId);
+    EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId) throws JsonGenerationException;
 
     @Transactional
-    EventFullDto updateByAdmin(UpdateEventReq event, Long eventId);
+    EventFullDto updateByAdmin(UpdateEventReq event, Long eventId) throws JsonGenerationException;
 
     @Transactional
     EventFullDto create(EventNewDto eventDto, Long initiatorId);
 
     //Получение события пользователем
-    EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId);
+    EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId) throws JsonGenerationException;
 
-    EventFullDto getById(Long eventId);
+    EventFullDto getById(Long eventId) throws JsonGenerationException;
 
     @Transactional
-    EventFullDto update(UpdateEventReq updateEventReq, Long id);
+    EventFullDto update(UpdateEventReq updateEventReq, Long id) throws JsonGenerationException;
 
     //Admin
     Set<EventFullDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
                                 LocalDateTime rangeStart,
                                 LocalDateTime rangeEnd,
-                                Integer from, Integer size);
+                                Integer from, Integer size) throws JsonGenerationException;
 
     @Transactional
-    EventFullDto setCanceled(Long eventId);
+    EventFullDto setCanceled(Long eventId) throws JsonGenerationException;
 
     @Transactional
-    EventFullDto setPublished(Long eventId);
+    EventFullDto setPublished(Long eventId) throws JsonGenerationException;
 
     List<ParticipationRequestDto> getAllRequestsForEvent(Long userId, Long eventId);
 

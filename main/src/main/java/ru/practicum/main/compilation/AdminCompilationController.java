@@ -13,7 +13,6 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
-@Validated
 public class AdminCompilationController {
     private final CompilationService compilitationService;
 

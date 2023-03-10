@@ -1,14 +1,16 @@
 package ru.practicum.main.event;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.json.JsonParseException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.client.HitSender;
-import ru.practicum.main.RespToInt;
+import ru.practicum.dto.StatDto;
 import ru.practicum.main.category.Category;
 import ru.practicum.main.category.CategoryRepository;
 import ru.practicum.main.event.Dto.EventFullDto;
@@ -61,23 +63,29 @@ public class EventServiceImpl implements EventService {
         log.info("Запрос на поис эвентов cat:{}  \n ", cats);
         Set<Event> events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(
                 pageable, text, text, categories, start, end).toSet();
-        Map<Long, List<Integer>> requestsAndViews = new HashMap<>();
+        Map<Long, Integer> idPartLimit = new HashMap<>();
         for (Event event : events) {
-            Integer partLimit = event.getParticipantLimit();
-
-            Integer hit = RespToInt.toHits(hitSender.getViews(event.getId()));
-            requestsAndViews.put(event.getId(), List.of(partLimit, hit));
+            idPartLimit.put(event.getId(), event.getParticipantLimit());
         }
         Set<EventShortDto> eventDtos = EventMapper.toEventShortDtos(events);
+        try {
+            setViewsToShortDto(eventDtos);
+        } catch (JsonGenerationException e) {
+            throw new RuntimeException(e);
+        }
 
         if (onlyAvalable) {
-            eventDtos = eventDtos.stream().filter(x -> (x.getConfirmedRequests() < requestsAndViews
-                    .get(x.getId()).get(0))).collect(Collectors.toSet());
-
+            for (EventShortDto eventDto : eventDtos) {
+                Integer partLimit = idPartLimit.get(eventDto.getId());
+                if (partLimit != 0 && eventDto.getConfirmedRequests().equals(partLimit)) {
+                    eventDtos.remove(eventDto);
+                }
+            }
         }
-        for (EventShortDto e : eventDtos) {
-            setViewToShortDto(e);
-            log.info("Events iteration {}", requestsAndViews.get(e.getId()));
+        try {
+            setViewsToShortDto(eventDtos);
+        } catch (JsonGenerationException e) {
+            throw new JsonParseException(e);
         }
         return eventDtos;
     }
@@ -87,12 +95,17 @@ public class EventServiceImpl implements EventService {
     public Set<EventShortDto> getAll(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, sortByDescEnd);
         Set<EventShortDto> events = EventMapper.toEventShortDtos((eventRepository.findAll(pageable)).toSet());
-        return setViewsToShortDto(events);
+        try {
+            setViewsToShortDto(events);
+        } catch (JsonGenerationException e) {
+            throw new JsonParseException(e);
+        }
+        return events;
     }
 
     @Override
     @Transactional
-    public EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId) {
+    public EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId) throws JsonGenerationException {
         Event event = getEvent(eventId);
         if (eventDto.getEventDate() != null) {
             throw new ConflictException("Дата события должна быть в будущем.");
@@ -105,7 +118,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto updateByAdmin(UpdateEventReq event, Long eventId) {
+    public EventFullDto updateByAdmin(UpdateEventReq event, Long eventId) throws JsonGenerationException {
 
         return update(event, eventId);
     }
@@ -136,23 +149,31 @@ public class EventServiceImpl implements EventService {
 
     //Получение события пользователем
     @Override
-    public EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId) {
+    public EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId) throws JsonGenerationException {
         Event event = getEvent(eventId);
         log.info("Event: {}", event);
         if (initiatorId.equals(event.getInitiator().getId())) {
-            return setView(EventMapper.toEventDto((event)));
+
+            EventFullDto eventFullDto = EventMapper.toEventDto(event);
+
+            setViewsToFullDtos(Set.of(eventFullDto));
+
+
+            return eventFullDto;
         }
         throw new NotFoundException("Неверный запрос");
     }
 
     @Override
-    public EventFullDto getById(Long eventId) {
-        return setView(EventMapper.toEventDto(getEvent(eventId)));
+    public EventFullDto getById(Long eventId) throws JsonGenerationException {
+        EventFullDto eventFullDto = EventMapper.toEventDto(getEvent(eventId));
+        setViewsToFullDtos(Set.of(eventFullDto));
+        return eventFullDto;
     }
 
     @Override
     @Transactional
-    public EventFullDto update(UpdateEventReq updateEventReq, Long id) {
+    public EventFullDto update(UpdateEventReq updateEventReq, Long id) throws JsonGenerationException {
         log.info("Обновление эвента {}", updateEventReq);
         Event event = getEvent(id);
         String annotation = updateEventReq.getAnnotation();
@@ -217,8 +238,8 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventDto(event);
         log.info("Вызов hitsender {}", eventFullDto.getId());
-
-        return setView(eventFullDto);
+        setViewsToFullDtos(Set.of(eventFullDto));
+        return eventFullDto;
     }
 
     //Admin
@@ -226,7 +247,7 @@ public class EventServiceImpl implements EventService {
     public Set<EventFullDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
                                        LocalDateTime rangeStart,
                                        LocalDateTime rangeEnd,
-                                       Integer from, Integer size) {
+                                       Integer from, Integer size) throws JsonGenerationException {
         Pageable pageable = PageRequest.of(from / size, size);
         log.info("Попытка вызвать поиск.");
         if (rangeStart == null) {
@@ -243,28 +264,37 @@ public class EventServiceImpl implements EventService {
         }
         Set<Event> events = eventRepository.findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween(
                 pageable, users, states, categories, rangeStart, rangeEnd).toSet();
-        return setViewsToFullDtos(EventMapper.toEventFullDtos(events));
+
+        Set<EventFullDto> eventFullDtos = EventMapper.toEventFullDtos(events);
+
+        setViewsToFullDtos(eventFullDtos);
+
+        return eventFullDtos;
     }
 
     @Override
     @Transactional
-    public EventFullDto setCanceled(Long eventId) {
+    public EventFullDto setCanceled(Long eventId) throws JsonGenerationException {
         Event event = getEvent(eventId);
         if (event.getState().equals(State.PENDING)) {
             event.setState(State.CANCELED);
         }
-        return setView(EventMapper.toEventDto(event));
+        EventFullDto eventFullDto = EventMapper.toEventDto(event);
+        setViewsToFullDtos(Set.of(eventFullDto));
+        return eventFullDto;
     }
 
     @Override
     @Transactional
-    public EventFullDto setPublished(Long eventId) {
+    public EventFullDto setPublished(Long eventId) throws JsonGenerationException {
         Event event = getEvent(eventId);
         if (event.getState().equals(State.REJECTED)) {
             throw new ConflictException("Данное событие было отменено и не может поменять статус.");
         }
         event.setState(State.PUBLISHED);
-        return setView(EventMapper.toEventDto(event));
+        EventFullDto eventFullDto = EventMapper.toEventDto(event);
+        setViewsToFullDtos(Set.of(eventFullDto));
+        return eventFullDto;
     }
 
     @Override
@@ -330,23 +360,45 @@ public class EventServiceImpl implements EventService {
                 new NotFoundException("неверный Request ID"));
     }
 
-    private Set<EventShortDto> setViewsToShortDto(Set<EventShortDto> events) {
-        return events.stream().peek(e -> e.setViews(3)).collect(Collectors.toSet());
+
+    private Set<EventFullDto> setViewsToFullDtos(Set<EventFullDto> events) throws JsonGenerationException {
+        Map<String, EventFullDto> uriEvents = new HashMap<>();
+        for (EventFullDto event : events) {
+            log.info("Event id {}", event.getId());
+            uriEvents.put("/event/" + event.getId(), event);
+        }
+        Set<EventFullDto> resp = new HashSet<>();
+        List<StatDto> statDtos;
+
+        statDtos = hitSender.getViews(uriEvents.keySet());
+
+        for (StatDto statDto : statDtos) {
+            String uri = statDto.getUri();
+            EventFullDto event = uriEvents.get(uri);
+            event.setViews(statDto.getHits());
+            resp.add(event);
+        }
+        return resp;
     }
 
-    private EventFullDto setView(EventFullDto event) {
-        log.info("Вызов Hitsender");
-        event.setViews(RespToInt.toHits(hitSender.getViews(event.getId())));
-        return event;
-    }
+    private Set<EventShortDto> setViewsToShortDto(Set<EventShortDto> events) throws JsonGenerationException {
+        Map<String, EventShortDto> uriEvents = new HashMap<>();
+        for (EventShortDto event : events) {
+            log.info("Event {}", event);
+            uriEvents.put("/event/" + event.getId(), event);
+        }
+        Set<EventShortDto> resp = new HashSet<>();
+        List<StatDto> statDtos;
 
-    private EventShortDto setViewToShortDto(EventShortDto event) {
-        log.info("Вызо Hitsender");
-        event.setViews(RespToInt.toHits(hitSender.getViews(event.getId())));
-        return event;
-    }
+        statDtos = hitSender.getViews(uriEvents.keySet());
 
-    private Set<EventFullDto> setViewsToFullDtos(Set<EventFullDto> events) {
-        return events.stream().peek(e -> setView(e)).collect(Collectors.toSet());
+
+        for (StatDto statDto : statDtos) {
+            String uri = statDto.getUri();
+            EventShortDto event = uriEvents.get(uri);
+            event.setViews(statDto.getHits());
+            resp.add(event);
+        }
+        return resp;
     }
 }

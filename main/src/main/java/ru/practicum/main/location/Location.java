@@ -13,7 +13,6 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Entity
 @Table(name = "locations")
-@Embeddable
 public class Location {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

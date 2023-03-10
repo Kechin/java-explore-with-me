@@ -1,18 +1,20 @@
 package ru.practicum.main.event;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.main.event.Dto.EventFullDto;
 import ru.practicum.main.event.Dto.EventNewDto;
 import ru.practicum.main.event.Dto.EventShortDto;
 import ru.practicum.main.event.Dto.UpdateEventReq;
-import ru.practicum.main.event.Dto.EventFullDto;
 import ru.practicum.main.request.Dto.EventRequestStatusUpdateRequest;
 import ru.practicum.main.request.Dto.EventRequestStatusUpdateResult;
 import ru.practicum.main.request.Dto.ParticipationRequestDto;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.List;
 import java.util.Set;
@@ -34,20 +36,20 @@ public class PrivateEventController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
-    EventFullDto update(@PathVariable Long userId, @PathVariable Long eventId, @RequestBody UpdateEventReq event) {
+    EventFullDto update(@PathVariable Long userId, @PathVariable Long eventId, @Valid @RequestBody UpdateEventReq event) throws JsonGenerationException {
         log.info("Запрос на изменение событие пользователем");
         return eventService.updateByUser(event, userId, eventId);
     }
 
     @ResponseStatus(code = HttpStatus.CREATED)
     @PostMapping("/{userId}/events")
-    EventFullDto create(@PathVariable Long userId, @RequestBody EventNewDto event) {
+    EventFullDto create(@PathVariable Long userId, @Valid @RequestBody EventNewDto event) {
         log.info("Запрос на добавление нового события");
         return eventService.create(event, userId);
     }
 
     @GetMapping("/{userId}/events/{eventId}")
-    EventFullDto getAllByUserId(@PathVariable Long userId, @PathVariable Long eventId) {
+    EventFullDto getAllByUserId(@PathVariable Long userId, @PathVariable Long eventId) throws JsonGenerationException {
         log.info("Получение полной информации добавленой текущим пользователем");
         return eventService.getByIdAndInitiatorId(eventId, userId);
     }

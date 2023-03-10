@@ -44,7 +44,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Нельзя создать запрос на участие в неопубликованном событии.");
         }
         int confirmedReq = requestRepository.getAllByEvent_IdAndStatus(eventId, Status.CONFIRMED).size();
-        if (confirmedReq >= (event.getParticipantLimit())) {
+        if (event.getParticipantLimit() > 0 && confirmedReq >= (event.getParticipantLimit())) {
             throw new ConflictException("Лимит участников не может быть превышен.");
         }
 
@@ -67,7 +67,7 @@ public class RequestServiceImpl implements RequestService {
         Request request = getRequest(requestId);
         getUser(requestId);
         if (!request.getRequester().getId().equals(requesterId)) {
-            throw new NotFoundException("");
+            throw new NotFoundException("User c данным ID не найден.");
         }
         request.setStatus(Status.CANCELED);
         return RequestMapper.toPartRequestDto(requestRepository.save(request));

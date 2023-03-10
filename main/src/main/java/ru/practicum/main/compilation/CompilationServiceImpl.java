@@ -48,7 +48,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     @Transactional
     public CompilationDto create(CompilationShortDto compilation) {
-        Set<Event> events = eventRepository.findAllByIdIn(compilation.getEvents());
+        Set<Event> events = null;
+        if (compilation.getEvents() != null || !compilation.getEvents().isEmpty()) {
+            events = eventRepository.findAllByIdIn(compilation.getEvents());
+        }
         return CompilationMapper.toCompilationDto(compilationRepository.save(new Compilation((events),
                 compilation.getTitle(), compilation.getPinned())));
     }
@@ -57,12 +60,20 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto update(Long compId, CompilationShortDto compilationDto) {
         Compilation compilation = getCompilation(compId);
-        Set<Event> events = getEvents(compilationDto.getEvents());
-        if (!events.isEmpty()) {
-            compilation.setEvents(events);
+
+        Set<Event> events;
+        if (compilation.getEvents() != null) {
+            events = getEvents(compilationDto.getEvents());
+            if (events != null && !events.isEmpty()) {
+                log.info("Comlilation {}", events);
+                compilation.setEvents(events);
+            }
         }
-        compilation.setTitle(compilation.getTitle());
-        compilation.setPinned(compilationDto.getPinned());
+        compilation.setTitle(compilationDto.getTitle());
+        if (compilation.getPinned() != null) {
+            compilation.setPinned(compilationDto.getPinned());
+
+        }
         return CompilationMapper.toCompilationDto(compilation);
     }
 

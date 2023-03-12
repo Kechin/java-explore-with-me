@@ -8,6 +8,7 @@ import ru.practicum.main.location.LocationDto;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
@@ -31,7 +32,7 @@ public class EventNewDto {
     @NotBlank
     @Size(max = 1024)
     private String title;
-    @NotNull
+    @PositiveOrZero
     private Integer participantLimit;
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

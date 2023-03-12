@@ -1,6 +1,5 @@
 package ru.practicum.main.exception;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.PropertyValueException;
 import org.springframework.boot.json.JsonParseException;
@@ -99,11 +98,4 @@ public class ErrorHandler {
                 HttpStatus.BAD_GATEWAY, LocalDateTime.now());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_GATEWAY)
-    public ApiError jsonGenException(final JsonGenerationException e) {
-        log.error(e.getMessage());
-        return new ApiError(List.of(e.getMessage()), e.getMessage(), "Ошибки в запросе.",
-                HttpStatus.BAD_GATEWAY, LocalDateTime.now());
-    }
 }

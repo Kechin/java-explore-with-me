@@ -69,7 +69,9 @@ public class CompilationServiceImpl implements CompilationService {
                 compilation.setEvents(events);
             }
         }
-        compilation.setTitle(compilationDto.getTitle());
+        if (compilation.getTitle() != null && !compilation.getTitle().isBlank()) {
+            compilation.setTitle(compilationDto.getTitle());
+        }
         if (compilation.getPinned() != null) {
             compilation.setPinned(compilationDto.getPinned());
 

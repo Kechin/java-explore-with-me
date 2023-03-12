@@ -1,14 +1,12 @@
 package ru.practicum.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.json.JsonParseException;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatDto;
@@ -21,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 @Slf4j
-@Service
 public class HitSender extends BaseClient {
     private static final String apiPrefix = "/hit";
     private static final String getPrefix = "/stats?";
@@ -45,17 +42,18 @@ public class HitSender extends BaseClient {
         for (String uri : ids) {
             requestUris.append("&uris=" + uri);
         }
-        var response = get(requestUris.toString());
-        ObjectMapper mapper = new ObjectMapper();
-        List<StatDto> stats = new ArrayList<>();
-        log.info("{}", response.getBody());
-        try {
-            stats = Arrays.asList(mapper.readValue(response.getBody().toString(), StatDto[].class));
-        } catch (JsonProcessingException e) {
-            throw new JsonParseException(e);
+        RequestSpecification request = RestAssured.given();
+        request.header("Content-Type", "application/json");
+        var response = request.get("http://localhost:9090" + getPrefix + requestUris);
+        if (response == null || response.getBody().toString().isEmpty()) {
+            return new ArrayList<>();
         }
-        return stats;
+        List<StatDto> resp = Arrays.asList(response.getBody().as(StatDto[].class));
+        log.info("resp {}", resp);
+        return resp;
     }
+
+
 }
 
 

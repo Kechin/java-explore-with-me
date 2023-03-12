@@ -8,8 +8,6 @@ import ru.practicum.main.Create;
 import ru.practicum.main.compilation.Dto.CompilationDto;
 import ru.practicum.main.compilation.Dto.CompilationShortDto;
 
-import javax.validation.Valid;
-
 @RestController
 @RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
@@ -23,7 +21,7 @@ public class AdminCompilationController {
     }
 
     @PatchMapping(("/{compId}"))
-    CompilationDto publish(@PathVariable Long compId, @RequestBody @Valid CompilationShortDto compilation) {
+    CompilationDto publish(@PathVariable Long compId, @RequestBody CompilationShortDto compilation) {
         return compilitationService.update(compId, compilation);
     }
 

@@ -1,14 +1,13 @@
 package ru.practicum.main.event;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.client.HitSender;
-import ru.practicum.main.event.Dto.EventShortDto;
 import ru.practicum.main.event.Dto.EventFullDto;
+import ru.practicum.main.event.Dto.EventShortDto;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
@@ -28,13 +27,13 @@ public class PublicEventController {
     private final HitSender hitSender;
 
     @GetMapping
-    public Set<EventShortDto> getWithFilters(@RequestParam(defaultValue = "") String text,
-                                             @RequestParam(defaultValue = "0") ArrayList<Long> categories,
-                                             @RequestParam(defaultValue = "false")
-                                             boolean paid, @RequestParam(required = false)
+    public Set<EventShortDto> getWithFilters(@RequestParam(required = false) String text,
+                                             @RequestParam(required = false) ArrayList<Long> categories,
+                                             @RequestParam(required = false) boolean paid,
+                                             @RequestParam(defaultValue = "2000-01-01 01:01:01")
                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                              LocalDateTime rangeStart,
-                                             @RequestParam(required = false)
+                                             @RequestParam(defaultValue = "2030-01-01 01:01:01")
                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                              LocalDateTime rangeEnd,
                                              @RequestParam(defaultValue = "false")
@@ -49,11 +48,11 @@ public class PublicEventController {
         log.info("Запрос на создание hit {}", httpServletRequest.getRequestURI());
         hitSender.createHit(httpServletRequest);
         return eventService.getAllWithFilter(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from,
-                size, httpServletRequest);
+                size);
     }
 
     @GetMapping("/{eventId}")
-    EventFullDto getById(@PathVariable Long eventId, HttpServletRequest httpServletRequest) throws JsonGenerationException {
+    EventFullDto getById(@PathVariable Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Запрос на создание hit {}", httpServletRequest.getRequestURI());
         log.info("Попытка отправить HIT");
         hitSender.createHit(httpServletRequest);

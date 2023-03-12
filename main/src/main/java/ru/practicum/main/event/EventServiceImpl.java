@@ -1,9 +1,7 @@
 package ru.practicum.main.event;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.json.JsonParseException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -35,10 +33,8 @@ import ru.practicum.main.request.model.Status;
 import ru.practicum.main.user.UserRepository;
 import ru.practicum.main.user.model.User;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -55,26 +51,60 @@ public class EventServiceImpl implements EventService {
 
     ///PUBLIC
     public Set<EventShortDto> getAllWithFilter(String text, ArrayList<Long> cats, Boolean paid, LocalDateTime start,
-                                               LocalDateTime end, Boolean onlyAvalable, String sort, Integer from,
-                                               Integer size, HttpServletRequest httpServletRequest) {
-        List<Category> categories = categoryRepository.findAllById(cats);
+                                               LocalDateTime end, Boolean onlyAvailable, String sort, Integer from,
+                                               Integer size) {
         Sort sortValue = Sort.by(Sort.Direction.DESC, (Objects.equals(sort, "EVENT_DATE") ? "eventDate" : "views"));//EVENT_DATE, VIEWS
         Pageable pageable = PageRequest.of(from / size, size, sortValue);
         log.info("Запрос на поис эвентов cat:{}  \n ", cats);
-        Set<Event> events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(
-                pageable, text, text, categories, start, end).toSet();
-        Map<Long, Integer> idPartLimit = new HashMap<>();
-        for (Event event : events) {
-            idPartLimit.put(event.getId(), event.getParticipantLimit());
-        }
-        Set<EventShortDto> eventDtos = EventMapper.toEventShortDtos(events);
-        try {
-            setViewsToShortDto(eventDtos);
-        } catch (JsonGenerationException e) {
-            throw new RuntimeException(e);
+        Set<Event> events = new HashSet<>();
+        if (cats != null) {
+            List<Category> category = categoryRepository.findAllById(cats);
+            //TEXT PAID CAT
+            if (text != null && paid != null)
+                events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndPaidIsAndCategoryInAndEventDateBetween(
+                        pageable, text, text, paid, category,
+                        start, end).toSet();
+                // PAID CAT
+            else if (text == null && paid != null )
+                events = eventRepository.findAllByPaidIsAndCategoryInAndEventDateBetween(
+                        pageable, paid, category,
+                        start, end).toSet();
+                //TEXT  CAT
+            else if (text != null && paid == null )
+                events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(
+                        pageable, text, text, category,
+                        start, end).toSet();
+                // CAT
+            else if (text == null && paid == null )
+                events = eventRepository.findAllByCategoryInAndEventDateBetween(
+                        pageable, category,
+                        start, end).toSet();
+        } else if (text != null && paid != null )
+            //TEXT PAID
+            events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndPaidIsAndEventDateBetween(
+                    pageable, text, text, paid, start, end).toSet();
+            //TEXT
+        else if (text != null && paid == null)
+            events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndEventDateBetween(
+                    pageable, text, text, start, end).toSet();
+        else if (text == null) {
+            // PAID
+            if (paid != null) events = eventRepository.findAllByPaidIsAndEventDateBetween(
+                    pageable, paid, start, end).toSet();
+                //
+            else events = eventRepository.findAllByEventDateBetween(pageable, start, end).toSet();
         }
 
-        if (onlyAvalable) {
+        Set<EventShortDto> eventDtos = EventMapper.toEventShortDtos(events);
+        log.info("Установка views и confirmedeReq {}", eventDtos);
+        if (!eventDtos.isEmpty())
+
+            setViewsAndConfirmedRequestToShortDto(eventDtos);
+        if (onlyAvailable) {
+            Map<Long, Integer> idPartLimit = new HashMap<>();
+            for (Event event : events) {
+                idPartLimit.put(event.getId(), event.getParticipantLimit());
+            }
             for (EventShortDto eventDto : eventDtos) {
                 Integer partLimit = idPartLimit.get(eventDto.getId());
                 if (partLimit != 0 && eventDto.getConfirmedRequests().equals(partLimit)) {
@@ -82,11 +112,8 @@ public class EventServiceImpl implements EventService {
                 }
             }
         }
-        try {
-            setViewsToShortDto(eventDtos);
-        } catch (JsonGenerationException e) {
-            throw new JsonParseException(e);
-        }
+
+
         return eventDtos;
     }
 
@@ -95,17 +122,12 @@ public class EventServiceImpl implements EventService {
     public Set<EventShortDto> getAll(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, sortByDescEnd);
         Set<EventShortDto> events = EventMapper.toEventShortDtos((eventRepository.findAll(pageable)).toSet());
-        try {
-            setViewsToShortDto(events);
-        } catch (JsonGenerationException e) {
-            throw new JsonParseException(e);
-        }
+        if (!events.isEmpty()) setViewsAndConfirmedRequestToShortDto(events);
         return events;
     }
 
     @Override
-    @Transactional
-    public EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId) throws JsonGenerationException {
+    public EventFullDto updateByUser(UpdateEventReq eventDto, Long initiatorId, Long eventId) {
         Event event = getEvent(eventId);
         if (eventDto.getEventDate() != null) {
             throw new ConflictException("Дата события должна быть в будущем.");
@@ -118,7 +140,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto updateByAdmin(UpdateEventReq event, Long eventId) throws JsonGenerationException {
+    public EventFullDto updateByAdmin(UpdateEventReq event, Long eventId) {
 
         return update(event, eventId);
     }
@@ -128,7 +150,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto create(EventNewDto eventDto, Long initiatorId) {
         log.info("Попытка добавления нового события {}", eventDto);
         User user = getUser(initiatorId);
-        if (eventDto.getEventDate().isBefore(LocalDateTime.now())) {
+        if (eventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
             throw new ConflictException("Дата события должна быть в будущем.");
         }
         Category category = getCategory(eventDto.getCategory());
@@ -136,12 +158,12 @@ public class EventServiceImpl implements EventService {
         Event event = EventMapper.eventNewDtoToEvent(eventDto);
         Location location = locationRepository
                 .save(new Location(null, eventDto.getLocation().getLat(), eventDto.getLocation().getLon()));
-        log.info("Событие создано {}", event.getAnnotation());
         event.setInitiator(user);
         event.setCategory(category);
         event.setState(State.PENDING);
         event.setLocation(location);
         event.setCreatedOn(LocalDateTime.now());
+        log.info("Событие создано {}", event.getCreatedOn());
         log.info("Initiator установлен  {}", event.getInitiator().getName());
         EventFullDto evenDto = EventMapper.toEventDto(eventRepository.save(event));
         return evenDto;
@@ -149,31 +171,27 @@ public class EventServiceImpl implements EventService {
 
     //Получение события пользователем
     @Override
-    public EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId) throws JsonGenerationException {
+    public EventFullDto getByIdAndInitiatorId(Long eventId, Long initiatorId) {
         Event event = getEvent(eventId);
         log.info("Event: {}", event);
         if (initiatorId.equals(event.getInitiator().getId())) {
-
             EventFullDto eventFullDto = EventMapper.toEventDto(event);
-
-            setViewsToFullDtos(Set.of(eventFullDto));
-
-
+            setViewsAndConfirmedRequestToFullDtos(Set.of(eventFullDto));
             return eventFullDto;
         }
         throw new NotFoundException("Неверный запрос");
     }
 
     @Override
-    public EventFullDto getById(Long eventId) throws JsonGenerationException {
+    public EventFullDto getById(Long eventId) {
         EventFullDto eventFullDto = EventMapper.toEventDto(getEvent(eventId));
-        setViewsToFullDtos(Set.of(eventFullDto));
+        setViewsAndConfirmedRequestToFullDtos(Set.of(eventFullDto));
         return eventFullDto;
     }
 
     @Override
     @Transactional
-    public EventFullDto update(UpdateEventReq updateEventReq, Long id) throws JsonGenerationException {
+    public EventFullDto update(UpdateEventReq updateEventReq, Long id) {
         log.info("Обновление эвента {}", updateEventReq);
         Event event = getEvent(id);
         String annotation = updateEventReq.getAnnotation();
@@ -188,7 +206,7 @@ public class EventServiceImpl implements EventService {
         if (annotation != null && !annotation.isBlank()) {
             event.setAnnotation(annotation);
         }
-        if (categoryId != null && !annotation.isBlank()) {
+        if (categoryId != null ) {
             event.setCategory(getCategory(categoryId));
         }
         if (description != null && !description.isBlank()) {
@@ -238,7 +256,8 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventDto(event);
         log.info("Вызов hitsender {}", eventFullDto.getId());
-        setViewsToFullDtos(Set.of(eventFullDto));
+        setViewsAndConfirmedRequestToFullDtos(Set.of(eventFullDto));
+        log.info("Событие обновлено {}", eventFullDto);
         return eventFullDto;
     }
 
@@ -247,53 +266,61 @@ public class EventServiceImpl implements EventService {
     public Set<EventFullDto> getEvents(List<Long> users, List<State> states, List<Long> categories,
                                        LocalDateTime rangeStart,
                                        LocalDateTime rangeEnd,
-                                       Integer from, Integer size) throws JsonGenerationException {
+                                       Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         log.info("Попытка вызвать поиск.");
-        if (rangeStart == null) {
-            rangeStart = LocalDateTime.of(1900, 1, 1, 1, 1);
-        }
-        if (rangeEnd == null) {
-            rangeEnd = LocalDateTime.of(2030, 1, 1, 1, 1);
-        }
+        Set<Event> events = new HashSet<>();
         if (states == null) {
             states = List.of(State.values());
         }
-        if (categories == null) {
-            categories = categoryRepository.findAll().stream().map(e -> e.getId()).collect(Collectors.toList());
+        if (users == null && categories == null) {
+            events = eventRepository.findAllByStateInAndEventDateIsBetween(
+                    pageable, states, rangeStart, rangeEnd).toSet();
+
         }
-        Set<Event> events = eventRepository.findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween(
-                pageable, users, states, categories, rangeStart, rangeEnd).toSet();
+        if (users == null && categories != null) {
+            events = eventRepository.findAllByStateInAndCategory_IdInAndEventDateIsBetween(
+                    pageable, states, categories, rangeStart, rangeEnd).toSet();
+
+        }
+        if (users != null && categories == null) {
+            events = eventRepository.findAllByInitiator_IdInAndStateInAndEventDateIsBetween(
+                    pageable, users, states, rangeStart, rangeEnd).toSet();
+
+        }
+        if (users != null && categories != null) {
+            events = eventRepository.findAllByInitiator_IdInAndStateInAndCategory_IdInAndEventDateIsBetween(
+                    pageable, users, states, categories, rangeStart, rangeEnd).toSet();
+
+        }
 
         Set<EventFullDto> eventFullDtos = EventMapper.toEventFullDtos(events);
-
-        setViewsToFullDtos(eventFullDtos);
-
+        if (!eventFullDtos.isEmpty()) setViewsAndConfirmedRequestToFullDtos(eventFullDtos);
         return eventFullDtos;
     }
 
     @Override
     @Transactional
-    public EventFullDto setCanceled(Long eventId) throws JsonGenerationException {
+    public EventFullDto setCanceled(Long eventId) {
         Event event = getEvent(eventId);
         if (event.getState().equals(State.PENDING)) {
             event.setState(State.CANCELED);
         }
         EventFullDto eventFullDto = EventMapper.toEventDto(event);
-        setViewsToFullDtos(Set.of(eventFullDto));
+        setViewsAndConfirmedRequestToFullDtos(Set.of(eventFullDto));
         return eventFullDto;
     }
 
     @Override
     @Transactional
-    public EventFullDto setPublished(Long eventId) throws JsonGenerationException {
+    public EventFullDto setPublished(Long eventId) {
         Event event = getEvent(eventId);
         if (event.getState().equals(State.REJECTED)) {
             throw new ConflictException("Данное событие было отменено и не может поменять статус.");
         }
         event.setState(State.PUBLISHED);
         EventFullDto eventFullDto = EventMapper.toEventDto(event);
-        setViewsToFullDtos(Set.of(eventFullDto));
+        setViewsAndConfirmedRequestToFullDtos(Set.of(eventFullDto));
         return eventFullDto;
     }
 
@@ -309,24 +336,35 @@ public class EventServiceImpl implements EventService {
     public EventRequestStatusUpdateResult requestsStatusUpdate(Long userId, Long eventId,
                                                                EventRequestStatusUpdateRequest request) {
         Event event = getEvent(eventId);
-
+        Integer participantLimit = event.getParticipantLimit();
+        Status status = request.getStatus();
         if (!userId.equals(event.getInitiator().getId())) {
             throw new NotFoundException("Неверный запрос");
         }
-        List<Request> requests = request.getRequestIds()
-                .stream().map(this::getRequest)
-                .peek(e -> {
-                    if (e.getStatus().equals(Status.CONFIRMED) || request.getStatus().equals(Status.CANCELED)) {
-                        throw new ConflictException("Нельзя отменить подтвержденную заявку на участие.");
-                    }
-                    if (requestRepository.getAllByEvent_IdAndStatus(eventId, Status.CONFIRMED).size() >=
-                            (event.getParticipantLimit())) {
-                        throw new ConflictException("Лимит участников не может быть превышен.");
-                    } else {
-                        e.setStatus(request.getStatus());
-                    }
-                })
-                .collect(Collectors.toList());
+        Integer confirmedRequestsCount = requestRepository.getConfirmedRequest(eventId);
+        log.info("ConfirmedRequest--PartLimit {}--{}", confirmedRequestsCount, participantLimit);
+        boolean overLimit = false;
+        List<Request> requests = requestRepository.getAllByIdIn(request.getRequestIds());
+        for (Request e : requests) {
+            if (e.getStatus() == Status.CONFIRMED && status == Status.CANCELED) {
+                throw new ConflictException("Нельзя отменить подтвержденную заявку на участие.");
+            }
+            if (confirmedRequestsCount.equals(participantLimit) && participantLimit != 0) {
+                log.info("ConfReq - PartLimit {}-{}", confirmedRequestsCount, participantLimit);
+                e.setStatus(Status.CANCELED);
+                requestRepository.save(e);
+                overLimit = true;
+            } else {
+                e.setStatus(status);
+                if (status == Status.CONFIRMED) {
+                    confirmedRequestsCount++;
+                }
+                requestRepository.save(e);
+            }
+        }
+        if (overLimit) {
+            throw new ConflictException("Лимит участников привышен");
+        }
         List<ParticipationRequestDto> confirmedRequests = new ArrayList<>();
         List<ParticipationRequestDto> rejectedRequests = new ArrayList<>();
         for (Request req : requests) {
@@ -360,45 +398,47 @@ public class EventServiceImpl implements EventService {
                 new NotFoundException("неверный Request ID"));
     }
 
-
-    private Set<EventFullDto> setViewsToFullDtos(Set<EventFullDto> events) throws JsonGenerationException {
+    private void setViewsAndConfirmedRequestToFullDtos(Set<EventFullDto> events) {
         Map<String, EventFullDto> uriEvents = new HashMap<>();
+        List<Long> eventsId = new ArrayList<>();
         for (EventFullDto event : events) {
-            log.info("Event id {}", event.getId());
-            uriEvents.put("/event/" + event.getId(), event);
+            log.info("Event {}", event);
+            eventsId.add(event.getId());
+            uriEvents.put("/events/" + event.getId(), event);
         }
         Set<EventFullDto> resp = new HashSet<>();
+        log.info("Запрос на сервер статистики {}", uriEvents);
         List<StatDto> statDtos;
-
         statDtos = hitSender.getViews(uriEvents.keySet());
-
         for (StatDto statDto : statDtos) {
             String uri = statDto.getUri();
             EventFullDto event = uriEvents.get(uri);
             event.setViews(statDto.getHits());
+            event.setConfirmedRequests(requestRepository.getConfirmedRequest(event.getId()));
             resp.add(event);
         }
-        return resp;
+        log.info("Статистика получена");
     }
 
-    private Set<EventShortDto> setViewsToShortDto(Set<EventShortDto> events) throws JsonGenerationException {
+    private void setViewsAndConfirmedRequestToShortDto(Set<EventShortDto> events) {
         Map<String, EventShortDto> uriEvents = new HashMap<>();
+        List<Long> eventsId = new ArrayList<>();
         for (EventShortDto event : events) {
             log.info("Event {}", event);
-            uriEvents.put("/event/" + event.getId(), event);
+            eventsId.add(event.getId());
+            uriEvents.put("/events/" + event.getId(), event);
         }
         Set<EventShortDto> resp = new HashSet<>();
         List<StatDto> statDtos;
-
+        log.info("Попытка вызвать HitSender");
         statDtos = hitSender.getViews(uriEvents.keySet());
-
-
         for (StatDto statDto : statDtos) {
             String uri = statDto.getUri();
             EventShortDto event = uriEvents.get(uri);
             event.setViews(statDto.getHits());
+            event.setConfirmedRequests(requestRepository.getConfirmedRequest(event.getId()));
             resp.add(event);
         }
-        return resp;
+
     }
 }

@@ -1,6 +1,5 @@
 package ru.practicum.main.event;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,7 @@ public class PrivateEventController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}")
-    EventFullDto update(@PathVariable Long userId, @PathVariable Long eventId, @Valid @RequestBody UpdateEventReq event) throws JsonGenerationException {
+    EventFullDto update(@PathVariable Long userId, @PathVariable Long eventId, @Valid @RequestBody UpdateEventReq event) {
         log.info("Запрос на изменение событие пользователем");
         return eventService.updateByUser(event, userId, eventId);
     }
@@ -49,7 +48,7 @@ public class PrivateEventController {
     }
 
     @GetMapping("/{userId}/events/{eventId}")
-    EventFullDto getAllByUserId(@PathVariable Long userId, @PathVariable Long eventId) throws JsonGenerationException {
+    EventFullDto getAllByUserId(@PathVariable Long userId, @PathVariable Long eventId) {
         log.info("Получение полной информации добавленой текущим пользователем");
         return eventService.getByIdAndInitiatorId(eventId, userId);
     }

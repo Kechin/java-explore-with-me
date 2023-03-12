@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.main.request.model.Status;
 
-import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
@@ -13,6 +12,5 @@ import java.util.List;
 @NoArgsConstructor
 public class EventRequestStatusUpdateRequest {
     private List<Long> requestIds;
-    @Size(max = 64)
     private Status status;
 }

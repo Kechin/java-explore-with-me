@@ -65,21 +65,21 @@ public class EventServiceImpl implements EventService {
                         pageable, text, text, paid, category,
                         start, end).toSet();
                 // PAID CAT
-            else if (text == null && paid != null )
+            else if (text == null && paid != null)
                 events = eventRepository.findAllByPaidIsAndCategoryInAndEventDateBetween(
                         pageable, paid, category,
                         start, end).toSet();
                 //TEXT  CAT
-            else if (text != null && paid == null )
+            else if (text != null && paid == null)
                 events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndCategoryInAndEventDateBetween(
                         pageable, text, text, category,
                         start, end).toSet();
                 // CAT
-            else if (text == null && paid == null )
+            else if (text == null && paid == null)
                 events = eventRepository.findAllByCategoryInAndEventDateBetween(
                         pageable, category,
                         start, end).toSet();
-        } else if (text != null && paid != null )
+        } else if (text != null && paid != null)
             //TEXT PAID
             events = eventRepository.findAllByAnnotationContainsIgnoreCaseOrDescriptionContainsIgnoreCaseAndPaidIsAndEventDateBetween(
                     pageable, text, text, paid, start, end).toSet();
@@ -206,7 +206,7 @@ public class EventServiceImpl implements EventService {
         if (annotation != null && !annotation.isBlank()) {
             event.setAnnotation(annotation);
         }
-        if (categoryId != null ) {
+        if (categoryId != null) {
             event.setCategory(getCategory(categoryId));
         }
         if (description != null && !description.isBlank()) {

@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.main.request.model.Request;
 import ru.practicum.main.request.model.Status;
 
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 
 public interface RequestRepository extends JpaRepository<Request, Long> {
 
@@ -20,14 +21,21 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     List<Request> getAllByIdIn(List<Long> requestId);
 
-    @Query("select   count(req) " +
-            " from Request req where req.event.id = ?1  and req.status = 'CONFIRMED'" +
+    @Query("select new map (req.event.id , count(req.id))  " +
+            " from Request req where req.event.id in (?1)  and req.status = 'CONFIRMED'" +
             " group by req.event.id")
-    Integer getConfirmedRequestCount(Long ids);
+    List<Map<Integer, Map<Long, Integer>>> getConfirmedRequestCount(List ids);
 
-    default Integer getConfirmedRequest(Long id) {
-        Integer count = getConfirmedRequestCount(id);
-        return count == null ? 0 : count;
+    default Map<Long, Integer> getConfirmedRequest(List ids) {
+        var count = getConfirmedRequestCount(ids);
+        Map<Long, Integer> result = new HashMap<>();
+        for (Map e : count) {
+            System.out.println(e);
+            long id = (long) e.get("0");
+            long confReq = (long) e.get("1");
+            result.put(id, (int) confReq);
+        }
+        return result;
     }
 }
 

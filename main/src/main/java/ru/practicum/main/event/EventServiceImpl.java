@@ -113,6 +113,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
+        setViewsAndConfirmedRequestToShortDto((eventDtos));
 
         return eventDtos;
     }
@@ -341,7 +342,8 @@ public class EventServiceImpl implements EventService {
         if (!userId.equals(event.getInitiator().getId())) {
             throw new NotFoundException("Неверный запрос");
         }
-        Integer confirmedRequestsCount = requestRepository.getConfirmedRequest(eventId);
+        Integer confirmeRequest = requestRepository.getConfirmedRequest(List.of(eventId)).get(eventId);
+        Integer confirmedRequestsCount = confirmeRequest == null ? 0 : confirmeRequest;
         log.info("ConfirmedRequest--PartLimit {}--{}", confirmedRequestsCount, participantLimit);
         boolean overLimit = false;
         List<Request> requests = requestRepository.getAllByIdIn(request.getRequestIds());
@@ -409,12 +411,15 @@ public class EventServiceImpl implements EventService {
         Set<EventFullDto> resp = new HashSet<>();
         log.info("Запрос на сервер статистики {}", uriEvents);
         List<StatDto> statDtos;
+        Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
+
         statDtos = hitSender.getViews(uriEvents.keySet());
         for (StatDto statDto : statDtos) {
             String uri = statDto.getUri();
             EventFullDto event = uriEvents.get(uri);
             event.setViews(statDto.getHits());
-            event.setConfirmedRequests(requestRepository.getConfirmedRequest(event.getId()));
+            Integer confirmedRequest = confRequests.get(event.getId());
+            event.setConfirmedRequests(confirmedRequest == null ? 0 : confirmedRequest);
             resp.add(event);
         }
         log.info("Статистика получена");
@@ -432,11 +437,13 @@ public class EventServiceImpl implements EventService {
         List<StatDto> statDtos;
         log.info("Попытка вызвать HitSender");
         statDtos = hitSender.getViews(uriEvents.keySet());
+        Map<Long, Integer> confRequests = (requestRepository.getConfirmedRequest(eventsId));
         for (StatDto statDto : statDtos) {
             String uri = statDto.getUri();
             EventShortDto event = uriEvents.get(uri);
             event.setViews(statDto.getHits());
-            event.setConfirmedRequests(requestRepository.getConfirmedRequest(event.getId()));
+            Integer confirmedRequest = confRequests.get(event.getId());
+            event.setConfirmedRequests(confirmedRequest == null ? 0 : confirmedRequest);
             resp.add(event);
         }
 

@@ -30,7 +30,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
         var count = getConfirmedRequestCount(ids);
         Map<Long, Integer> result = new HashMap<>();
         for (Map e : count) {
-            System.out.println(e);
             long id = (long) e.get("0");
             long confReq = (long) e.get("1");
             result.put(id, (int) confReq);

@@ -354,16 +354,15 @@ public class EventServiceImpl implements EventService {
             if (confirmedRequestsCount.equals(participantLimit) && participantLimit != 0) {
                 log.info("ConfReq - PartLimit {}-{}", confirmedRequestsCount, participantLimit);
                 e.setStatus(Status.CANCELED);
-                requestRepository.save(e);
                 overLimit = true;
             } else {
                 e.setStatus(status);
                 if (status == Status.CONFIRMED) {
                     confirmedRequestsCount++;
                 }
-                requestRepository.save(e);
             }
         }
+        requestRepository.saveAll(requests);
         if (overLimit) {
             throw new ConflictException("Лимит участников привышен");
         }
